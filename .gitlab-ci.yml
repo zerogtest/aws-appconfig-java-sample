@@ -32,12 +32,12 @@ detect-java-version:
   script:
     - apk add --no-cache grep
     - |
-      if grep -q "<java.version>17</java.version>\|<maven.compiler.source>17</maven.compiler.source>\|<maven.compiler.target>17</maven.compiler.target>" pom.xml; then
-        echo "BUILD_IMAGE=maven:3.8-openjdk-17" > build.env
-        echo "Detected Java 17 in pom.xml - Post-transformation"
+      if grep -q "<java.version>21</java.version>\|<maven.compiler.source>21</maven.compiler.source>\|<maven.compiler.target>21</maven.compiler.target>" pom.xml; then
+        echo "BUILD_IMAGE=maven:3.9-amazoncorretto-21" > build.env
+        echo "Detected Java 21 in pom.xml - Post-transformation"
       else
-        echo "BUILD_IMAGE=maven:3.8-openjdk-8" > build.env
-        echo "Detected Java 8 in pom.xml - Pre-transformation"
+        echo "BUILD_IMAGE=maven:3.9-amazoncorretto-21" > build.env
+        echo "Java 21 not detected in pom.xml - using Java 21 build image anyway"
       fi
     - cat build.env
   artifacts:
@@ -53,10 +53,10 @@ install-dependency:
     - detect-java-version
   script:
     - mvn install:install-file 
-      -Dfile=./movie-service-utils/built-library/0_1_0/movie-service-utils-0.1.0.jar 
+      -Dfile=./movie-service-utils/built-library/0_3_0/movie-service-utils-0.3.0.jar 
       -DgroupId=com.amazonaws.samples 
       -DartifactId=movie-service-utils 
-      -Dversion=0.1.0 
+      -Dversion=0.3.0 
       -Dpackaging=jar
   cache:
     paths:
@@ -120,11 +120,11 @@ package:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - |
-      if grep -q "<java.version>17</java.version>\|<maven.compiler.source>17</maven.compiler.source>\|<maven.compiler.target>17</maven.compiler.target>" pom.xml; then
-        echo "Detected Java 17 in pom.xml - Generating Dockerfile for Java 17"
-        sed 's/maven:3.6.1-amazoncorretto-8/maven:3.8-openjdk-17/g' Dockerfile > Dockerfile.dynamic
+      if grep -q "<java.version>21</java.version>\|<maven.compiler.source>21</maven.compiler.source>\|<maven.compiler.target>21</maven.compiler.target>" pom.xml; then
+        echo "Detected Java 21 in pom.xml - Generating Dockerfile for Java 21"
+        sed 's/maven:3.6.1-amazoncorretto-8/maven:3.9-amazoncorretto-21/g' Dockerfile > Dockerfile.dynamic
       else
-        echo "Detected Java 8 in pom.xml - Using original Dockerfile for Java 8"
+        echo "Using Dockerfile as-is (already Java 21)"
         cp Dockerfile Dockerfile.dynamic
       fi
     - /kaniko/executor
@@ -148,7 +148,7 @@ q-code-transformation:
     - install-dependency
   script:
     - |
-      if grep -q "<java.version>17</java.version>\|<maven.compiler.source>17</maven.compiler.source>\|<maven.compiler.target>17</maven.compiler.target>" pom.xml; then
+      if grep -q "<java.version>21</java.version>\|<maven.compiler.source>21</maven.compiler.source>\|<maven.compiler.target>21</maven.compiler.target>" pom.xml; then
         echo "Post-transformation detected - skipping dependency copy"
         mvn $MAVEN_CLI_OPTS verify
       else
