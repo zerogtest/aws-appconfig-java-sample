@@ -30,7 +30,7 @@ public class AppConfigUtilityTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         utility = new AppConfigUtility(mockClient, mockCache, Duration.ofSeconds(30), "test-client-id");
         testKey = new ConfigurationKey("testApp", "testEnv", "testConfig");
     }
